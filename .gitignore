@@ -1,0 +1,73 @@
+# ── Environment variables (NEVER commit these) ─────────────
+.env
+.env.local
+.env.development
+.env.development.local
+.env.test
+.env.test.local
+.env.production
+.env.production.local
+
+# ── Prisma ─────────────────────────────────────────────────
+prisma/seed.ts
+prisma/migrations/
+
+# ── Next.js ─────────────────────────────────────────────────
+.next/
+out/
+build/
+
+# ── Node ────────────────────────────────────────────────────
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# ── Database (local SQLite, never commit) ───────────────────
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+chillzone.db
+
+# ── Prisma generated client (regenerated on install) ────────
+prisma/generated/
+
+# ── OS files ────────────────────────────────────────────────
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# ── Editor files ────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# ── Logs ────────────────────────────────────────────────────
+logs/
+*.log
+
+# ── Vercel ──────────────────────────────────────────────────
+.vercel
+
+# ── TypeScript ──────────────────────────────────────────────
+*.tsbuildinfo
+next-env.d.ts
+
+# ── Misc ────────────────────────────────────────────────────
+.cache/
+.temp/
+.tmp/
+coverage/
