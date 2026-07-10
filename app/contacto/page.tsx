@@ -1,6 +1,7 @@
 'use client';
 
-import { MessageCircle, Instagram, Mail, MapPin, Clock, Send, ChevronLeft } from 'lucide-react';
+import { MessageCircle, Mail, MapPin, Clock, Send, ChevronLeft } from 'lucide-react';
+import Instagram from '@/components/icons/Instagram';
 import Link from 'next/link';
 import { useState } from 'react';
 
