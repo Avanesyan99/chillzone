@@ -6,33 +6,25 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "db:migrate": "prisma migrate deploy",
-    "db:seed": "tsx prisma/seed.ts",
-    "db:setup": "prisma migrate deploy && tsx prisma/seed.ts",
-    "db:studio": "prisma studio",
-    "postinstall": "prisma generate"
-  },
-  "prisma": {
-    "seed": "tsx prisma/seed.ts"
+    "db:seed": "tsx --env-file=.env scripts/seed-firestore.ts",
+    "db:migrate-legacy": "tsx --env-file=.env scripts/migrate-to-firebase.ts"
   },
   "dependencies": {
-    "@prisma/client": "^5.22.0",
     "@vercel/blob": "^0.27.1",
-    "bcryptjs": "^2.4.3",
-    "jose": "^5.9.6",
+    "firebase-admin": "^13.6.0",
     "lucide-react": "^1.24.0",
     "next": "^16.2.10",
-    "prisma": "^5.22.0",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "react-phone-number-input": "^3.4.17",
     "resend": "^3.5.0"
   },
   "devDependencies": {
-    "@types/bcryptjs": "^2.4.6",
     "@types/node": "^20",
+    "@types/pg": "^8.11.10",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "pg": "^8.13.1",
     "tsx": "^4.23.0",
     "typescript": "^5"
   }

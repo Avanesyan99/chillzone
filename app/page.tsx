@@ -1,4 +1,4 @@
-import { getAllProducts, getCategories } from '@/lib/db';
+import { getAllProducts, getCategories } from '@/lib/products';
 import HomeClient from '@/components/HomeClient';
 
 export const dynamic = 'force-dynamic';

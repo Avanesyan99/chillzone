@@ -10,9 +10,9 @@ const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 export async function sendPasswordResetEmail(opts: {
   to: string;
   userName: string;
-  token: string;
+  oobCode: string;
 }) {
-  const resetUrl = `${APP_URL}/reset-password?token=${opts.token}`;
+  const resetUrl = `${APP_URL}/reset-password?oobCode=${opts.oobCode}`;
 
   const { data, error } = await resend.emails.send({
     from: FROM,

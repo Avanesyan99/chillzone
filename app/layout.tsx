@@ -5,6 +5,7 @@ import { ThemeProvider } from '@/lib/theme-context';
 import { ConsentProvider } from '@/lib/consent-context';
 import Navbar from '@/components/Navbar';
 import CookieBanner from '@/components/CookieBanner';
+import Footer from '@/components/Footer';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -22,6 +23,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <CartProvider>
                 <Navbar />
                 <main>{children}</main>
+                <Footer />
                 <CookieBanner />
               </CartProvider>
             </AuthProvider>

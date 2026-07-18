@@ -1,31 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyToken } from '@/lib/auth';
-import { prisma } from '@/lib/db';
-
-async function isAdmin(req: NextRequest) {
-  const token = req.cookies.get('chillzone-token')?.value;
-  if (!token) return false;
-  const payload = await verifyToken(token);
-  if (!payload) return false;
-  const user = await prisma.user.findUnique({ where: { id: payload.userId }, select: { isAdmin: true } });
-  return user?.isAdmin ?? false;
-}
+import { requireAdmin } from '@/lib/auth';
+import { db } from '@/lib/firebase-admin';
 
 /** GET /api/admin/users — list all users for admin panel */
 export async function GET(req: NextRequest) {
-  if (!(await isAdmin(req))) return NextResponse.json({ error: 'No autorizado.' }, { status: 401 });
+  if (!(await requireAdmin(req))) return NextResponse.json({ error: 'No autorizado.' }, { status: 401 });
 
-  const users = await prisma.user.findMany({
-    orderBy: [{ createdAt: 'desc' }],
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      phone: true,
-      isAdmin: true,
-      createdAt: true,
-    },
-  });
+  const snap = await db.collection('users').get();
+  const users = snap.docs
+    .map(d => {
+      const data = d.data();
+      return {
+        id: d.id,
+        name: data.name,
+        email: data.email,
+        phone: data.phone ?? null,
+        isAdmin: data.isAdmin ?? false,
+        createdAt: (data.createdAt?.toDate?.() ?? new Date()).toISOString(),
+      };
+    })
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 
   return NextResponse.json({ users });
 }

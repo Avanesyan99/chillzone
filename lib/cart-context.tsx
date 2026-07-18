@@ -1,6 +1,6 @@
 'use client';
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
-import type { Product } from '@/lib/db';
+import type { Product } from '@/lib/products';
 import { finalPrice } from './discount';
 
 export interface CartItem { product: Product; quantity: number; }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/db';
-import { signToken } from '@/lib/auth';
+import { createSession, signInWithGoogleIdToken, SESSION_COOKIE_NAME, SESSION_COOKIE_MAX_AGE_SECONDS } from '@/lib/auth';
+import { db } from '@/lib/firebase-admin';
+import { FieldValue } from 'firebase-admin/firestore';
 import { sendWelcomeEmail } from '@/lib/email';
 
 interface GoogleTokenResponse {
@@ -77,56 +78,28 @@ export async function GET(req: NextRequest) {
       return NextResponse.redirect(`${appUrl}/login?error=email_not_verified`);
     }
 
-    // Find or create user
-    let user = await prisma.user.findFirst({
-      where: {
-        OR: [
-          { googleId: googleUser.sub },
-          { email: googleUser.email.toLowerCase() },
-        ],
-      },
-      select: { id: true, name: true, email: true, googleId: true, isAdmin: true },
-    });
+    // Create/link the Firebase Auth user via the Google id_token and get a Firebase session
+    const signIn = await signInWithGoogleIdToken(tokens.id_token, appUrl);
+    const isNewUser = !!signIn.isNewUser;
 
-    let isNewUser = false;
-
-    if (user) {
-      // Existing user — link Google ID if not already linked
-      if (!user.googleId) {
-        user = await prisma.user.update({
-          where: { id: user.id },
-          data: { googleId: googleUser.sub },
-          select: { id: true, name: true, email: true, googleId: true, isAdmin: true },
-        });
-      }
-    } else {
-      // New user — create account
-      user = await prisma.user.create({
-        data: {
-          name: googleUser.name,
-          email: googleUser.email.toLowerCase(),
-          googleId: googleUser.sub,
-          password: null, // Google users have no password
-        },
-        select: { id: true, name: true, email: true, googleId: true, isAdmin: true },
-      });
-      isNewUser = true;
-    }
-
-    // Send welcome email to new users (non-blocking)
     if (isNewUser) {
-      sendWelcomeEmail({ to: user.email, userName: user.name }).catch(console.error);
+      await db.collection('users').doc(signIn.localId).set({
+        name: googleUser.name,
+        email: googleUser.email.toLowerCase(),
+        phone: null,
+        isAdmin: false,
+        createdAt: FieldValue.serverTimestamp(),
+      });
+      sendWelcomeEmail({ to: googleUser.email, userName: googleUser.name }).catch(console.error);
     }
 
-    // Issue JWT and redirect
-    const jwt = await signToken({ userId: user.id, email: user.email, name: user.name, isAdmin: user.isAdmin });
-
+    const session = await createSession(signIn.idToken);
     const res = NextResponse.redirect(`${appUrl}/`);
 
-    res.cookies.set('chillzone-token', jwt, {
+    res.cookies.set(SESSION_COOKIE_NAME, session, {
       httpOnly: true,
       sameSite: 'lax',
-      maxAge: 604800, // 7 days
+      maxAge: SESSION_COOKIE_MAX_AGE_SECONDS,
       path: '/',
     });
 

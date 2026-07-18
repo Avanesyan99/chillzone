@@ -1,4 +1,4 @@
-import { getProductBySlug, getAllProducts } from '@/lib/db';
+import { getProductBySlug, getAllProducts } from '@/lib/products';
 import { finalPrice, hasDiscount } from '@/lib/discount';
 import { notFound } from 'next/navigation';
 import AddToCartButton from '@/components/AddToCartButton';

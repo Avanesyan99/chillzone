@@ -5,26 +5,32 @@
 ---
 
 ## Stack
-- **Next.js 15** + TypeScript
-- **Prisma ORM** + **Supabase** (PostgreSQL)
+- **Next.js 16** + TypeScript
+- **Firebase** — Cloud Firestore (database) + Firebase Authentication (email/password + Google)
 - **Vercel Blob** — image storage
-- **JWT** auth (`jose` + `bcryptjs`, httpOnly cookies)
 - **GDPR-compliant** cookie consent banner
 
 ---
 
-## Deployment Guide (Vercel + Supabase)
+## Deployment Guide (Vercel + Firebase)
 
-### Step 1 — Supabase (database)
+### Step 1 — Firebase (auth + database)
 
-1. Go to [supabase.com](https://supabase.com) → New project
-2. Once created: **Project Settings → Database → Connection string**
-3. Copy two strings:
-   - **Transaction pooler** (port 6543) → `DATABASE_URL`
-   - **Session pooler / Direct** (port 5432) → `DIRECT_URL`
-4. Add `?pgbouncer=true&connection_limit=1` to the end of `DATABASE_URL`
+1. Go to [console.firebase.google.com](https://console.firebase.google.com) → Create a project
+2. **Build → Firestore Database** → Create database (Native mode)
+3. **Build → Authentication → Sign-in method** → enable **Email/Password** and **Google**
+   - Under the Google provider's "Web SDK configuration," add your `GOOGLE_CLIENT_ID` (see Step 2) as an additional authorized client ID
+4. **Authentication → Templates → Password reset** → set the Action URL to `https://yourdomain.com/reset-password`
+5. **Project Settings → Service accounts** → Generate new private key → gives `project_id`, `client_email`, `private_key`
+6. **Project Settings → General** → copy the **Web API Key**
+7. **Firestore → Rules** → set to `allow read, write: if false;` (only the server-side Admin SDK touches Firestore)
 
-### Step 2 — Vercel (hosting + images)
+### Step 2 — Google OAuth (for the custom Google login flow)
+
+1. [console.cloud.google.com](https://console.cloud.google.com) → APIs & Services → Credentials → OAuth 2.0 Client
+2. Authorized redirect URI: `https://yourdomain.com/api/auth/google/callback`
+
+### Step 3 — Vercel (hosting + images)
 
 1. Push this project to GitHub
 2. Go to [vercel.com](https://vercel.com) → Import repository
@@ -34,32 +40,52 @@
 
 | Variable | Value |
 |---|---|
-| `DATABASE_URL` | Supabase pooled URL (port 6543) |
-| `DIRECT_URL` | Supabase direct URL (port 5432) |
-| `JWT_SECRET` | Any long random string |
-| `ADMIN_KEY` | Secret key for the admin panel |
+| `FIREBASE_PROJECT_ID` | From the service account JSON |
+| `FIREBASE_CLIENT_EMAIL` | From the service account JSON |
+| `FIREBASE_PRIVATE_KEY` | From the service account JSON (keep the `\n` escapes) |
+| `FIREBASE_WEB_API_KEY` | Project Settings → General → Web API Key |
+| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | From Step 2 |
+| `RESEND_API_KEY` / `RESEND_FROM` | For transactional emails |
 
-6. Deploy — the build command (`prisma generate && prisma migrate deploy && next build`) runs migrations automatically.
-7. After first deploy, seed the products: run `npm run db:seed` locally pointing to your Supabase URL.
+6. Deploy.
+7. After first deploy, seed the products: run `npm run db:seed` locally pointing at your Firebase project.
 
-### Step 3 — Seed products
+### Step 4 — Seed products
 
 ```bash
-# In your local .env, set the real Supabase DATABASE_URL and DIRECT_URL, then:
+# In your local .env, set the real FIREBASE_* credentials, then:
 npm run db:seed
 ```
 
 ---
 
+## Migrating from an older Supabase/Prisma setup
+
+If you're upgrading an existing deployment that still has data in Supabase Postgres, run the
+one-time migration script instead of (or before) seeding:
+
+```bash
+npm install pg @types/pg  # only needed for this script
+# Set both the legacy DATABASE_URL/DIRECT_URL and the new FIREBASE_* vars in .env, then:
+npm run db:migrate-legacy
+```
+
+This copies all products and users (preserving bcrypt password hashes and Google account links)
+into Firestore/Firebase Auth. Verify the data, then delete `scripts/migrate-to-firebase.ts`,
+remove `DATABASE_URL`/`DIRECT_URL`, and decommission the Supabase project.
+
+---
+
 ## Admin Panel
 
-Visit `/admin` on your deployed site. Enter your `ADMIN_KEY` to:
+Visit `/dashboard` while logged in as an admin user to:
 
 - ➕ Add new products with name, price, category, modelo, capacity, color, stock
 - 🖼️ **Upload photos** — drag or click "Subir foto" → uploads to Vercel Blob automatically
 - ✏️ Edit any product
 - 🏷️ Set discounts (% + label) with live price preview
 - 🗑️ Delete products
+- 👤 Manage users (promote to admin, delete)
 
 No code changes needed to manage the catalog.
 
@@ -77,7 +103,7 @@ Users can review and reset their choice at `/cookies`.
 Cookie categories:
 | Cookie | Type | Purpose |
 |---|---|---|
-| `chillzone-token` | Required | JWT auth session (httpOnly) |
+| `chillzone-token` | Required | Firebase session cookie (httpOnly) |
 | `chillzone-cart` | Required | Cart persistence (localStorage) |
 | `chillzone-cookie-consent` | Required | Stores consent choice |
 | `chillzone-theme` | Functional | Dark/light mode preference |
@@ -87,14 +113,14 @@ Cookie categories:
 ## Local development
 
 ```bash
-# 1. Fill in .env with real Supabase credentials
+# 1. Fill in .env with real Firebase credentials
 cp .env.example .env
 
-# 2. Install + generate Prisma client
+# 2. Install dependencies
 npm install
 
-# 3. Run migrations + seed
-npm run db:setup
+# 3. Seed the catalog + admin user
+npm run db:seed
 
 # 4. Start dev server
 npm run dev
@@ -110,10 +136,10 @@ npm run dev
 | `/product/[slug]` | Product detail |
 | `/cart` | Cart + WhatsApp checkout (login required) |
 | `/login` | Login / Register / Forgot password |
-| `/reset-password?token=...` | Set new password |
+| `/reset-password?oobCode=...` | Set new password |
 | `/cuenta` | Profile management |
 | `/contacto` | Contact page |
-| `/admin` | **Admin panel** — manage products + upload photos |
+| `/dashboard` | **Admin panel** — manage products, discounts, users + upload photos |
 | `/cookies` | Cookie policy + consent settings |
 | `/privacidad` | Privacy policy |
 
@@ -122,9 +148,8 @@ npm run dev
 ## Before going live checklist
 
 - [ ] Replace `5491100000000` with your real number in `app/cart/page.tsx` and `app/contacto/page.tsx`
-- [ ] Set a strong `JWT_SECRET` (32+ random chars)
-- [ ] Set a strong `ADMIN_KEY`  
 - [ ] Update Instagram handle in `app/contacto/page.tsx`
 - [ ] Update company name/email in `app/privacidad/page.tsx` and `app/cookies/page.tsx`
 - [ ] Seed products via `npm run db:seed`
-- [ ] Add product photos via `/admin` panel
+- [ ] Add product photos via `/dashboard` panel
+- [ ] Lock down Firestore security rules (deny-all, Admin SDK only)

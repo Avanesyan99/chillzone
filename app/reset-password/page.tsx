@@ -10,7 +10,7 @@ function ResetForm() {
   const router = useRouter();
   const params = useSearchParams();
   const { refresh } = useAuth();
-  const token = params.get('token') || '';
+  const oobCode = params.get('oobCode') || '';
 
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
@@ -30,7 +30,7 @@ function ResetForm() {
       const res = await fetch('/api/auth/reset-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token, password }),
+        body: JSON.stringify({ oobCode, password }),
       });
       const data = await res.json();
       if (!res.ok) { setError(data.error || 'Error desconocido.'); return; }
@@ -44,7 +44,7 @@ function ResetForm() {
     }
   }
 
-  if (!token) {
+  if (!oobCode) {
     return (
       <div style={{ textAlign: 'center', padding: '40px 0' }}>
         <p style={{ color: 'var(--ember)', marginBottom: 16, fontSize: 14 }}>Enlace inválido o incompleto.</p>

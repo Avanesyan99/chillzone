@@ -1,16 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyToken } from '@/lib/auth';
+import { requireAdmin } from '@/lib/auth';
 import { put } from '@vercel/blob';
-import { prisma } from '@/lib/db';
-
-async function isAdmin(req: NextRequest) {
-  const token = req.cookies.get('chillzone-token')?.value;
-  if (!token) return false;
-  const payload = await verifyToken(token);
-  if (!payload) return false;
-  const user = await prisma.user.findUnique({ where: { id: payload.userId }, select: { isAdmin: true } });
-  return user?.isAdmin ?? false;
-}
 
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/avif'];
 const MAX_SIZE = 5 * 1024 * 1024; // 5MB
@@ -23,7 +13,7 @@ const MAX_SIZE = 5 * 1024 * 1024; // 5MB
  * Use that URL directly as the product's image_url.
  */
 export async function POST(req: NextRequest) {
-  if (!(await isAdmin(req))) {
+  if (!(await requireAdmin(req))) {
     return NextResponse.json({ error: 'No autorizado.' }, { status: 401 });
   }
 

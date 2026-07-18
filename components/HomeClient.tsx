@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback, useMemo } from 'react';
-import type { Product } from '@/lib/db';
+import type { Product } from '@/lib/products';
 import { finalPrice, hasDiscount } from '@/lib/discount';
 import ProductCard from './ProductCard';
 import SortFilter, { type FilterState } from './SortFilter';
@@ -103,7 +103,7 @@ export default function HomeClient({ products, categories}: Props) {
         </div>
       </section>
 
-      <footer style={{ borderTop: '1px solid var(--border)', padding: '32px 0', textAlign: 'center' }}>
+      {/* <footer style={{ borderTop: '1px solid var(--border)', padding: '32px 0', textAlign: 'center' }}>
         <div className="container">
           <p style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 20, letterSpacing: '0.12em', color: 'var(--text)', marginBottom: 5 }}>CHILLZONE</p>
           <p style={{ fontSize: 11, color: 'var(--text-dim)', letterSpacing: '0.08em' }}>OUTDOOR & LIFESTYLE GEAR · STAY REFRESHED. GO ANYWHERE.</p>
@@ -113,7 +113,7 @@ export default function HomeClient({ products, categories}: Props) {
             ))}
           </div>
         </div>
-      </footer>
+      </footer> */}
     </>
   );
 }

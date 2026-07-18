@@ -31,7 +31,7 @@ export default function PrivacidadPage() {
             <li><strong>Nombre y apellido</strong> — para personalizar tu experiencia y los pedidos.</li>
             <li><strong>Dirección de email</strong> — para la autenticación y comunicaciones de cuenta.</li>
             <li><strong>Número de teléfono</strong> (opcional) — para incluirlo en los pedidos por WhatsApp.</li>
-            <li><strong>Contraseña</strong> — almacenada en formato hash bcrypt, nunca en texto plano.</li>
+            <li><strong>Contraseña</strong> — gestionada y almacenada de forma segura por Firebase Authentication (Google), nunca accesible en texto plano por CHILLZONE.</li>
           </ul>
         </Section>
 
@@ -45,15 +45,15 @@ export default function PrivacidadPage() {
         </Section>
 
         <Section title="Almacenamiento y seguridad">
-          Los datos se almacenan en servidores de <strong>Supabase</strong> (base de datos PostgreSQL
-          alojada en AWS). Las contraseñas se hashean con bcrypt (salt rounds: 12). Las sesiones se
-          gestionan mediante JWT firmados con HS256 almacenados en cookies httpOnly, SameSite=Lax,
-          con expiración de 7 días.
+          Los datos se almacenan en <strong>Firebase</strong> (Google Cloud Platform): la información
+          de cuenta y catálogo en Cloud Firestore, y las credenciales en Firebase Authentication.
+          Las sesiones se gestionan mediante cookies de sesión firmadas por Firebase, almacenadas
+          httpOnly, SameSite=Lax, con expiración de 7 días.
         </Section>
 
         <Section title="Subprocesadores">
           <ul style={{ paddingLeft: 18, display: 'flex', flexDirection: 'column', gap: 4 }}>
-            <li><strong>Supabase Inc.</strong> — base de datos (PostgreSQL en AWS us-east-1)</li>
+            <li><strong>Google LLC (Firebase)</strong> — base de datos (Cloud Firestore) y autenticación (Firebase Authentication)</li>
             <li><strong>Vercel Inc.</strong> — hosting de la aplicación y almacenamiento de imágenes (Vercel Blob)</li>
             <li><strong>WhatsApp (Meta)</strong> — canal de comunicación para pedidos (datos transmitidos voluntariamente por el usuario al hacer clic en "Pedir por WhatsApp")</li>
           </ul>
@@ -63,8 +63,8 @@ export default function PrivacidadPage() {
           Conservamos tus datos mientras tu cuenta esté activa. Podés solicitar la eliminación de
           tu cuenta y todos tus datos en cualquier momento escribiendo a{' '}
           <a href="mailto:chillzonestore1@gmail.com" style={{ color: 'var(--ember)' }}>chillzonestore1@gmail.com</a>.
-          Los tokens de restablecimiento de contraseña se eliminan automáticamente al ser usados o
-          después de 30 minutos.
+          Los enlaces de restablecimiento de contraseña expiran automáticamente al ser usados o
+          después de 1 hora.
         </Section>
 
         <Section title="Tus derechos">

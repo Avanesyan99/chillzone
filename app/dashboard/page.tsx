@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/auth-context';
-import type { Product } from '@/lib/db';
+import type { Product } from '@/lib/products';
 import { finalPrice, hasDiscount } from '@/lib/discount';
 import {
   Lock, Plus, Trash2, Edit2, X, Upload, Image as ImageIcon, Tag, Save, Check, Loader2,
@@ -12,7 +12,7 @@ import Image from 'next/image';
 const CATEGORIES = ['vasos', 'termos', 'mates', 'accesorios'];
 
 interface FormState {
-  id?: number;
+  id?: string;
   slug: string;
   name: string;
   description: string;
@@ -28,7 +28,7 @@ interface FormState {
 }
 
 interface UserItem {
-  id: number;
+  id: string;
   name: string;
   email: string;
   phone: string | null;
@@ -50,7 +50,7 @@ export default function AdminPage() {
   const [pageLoading, setPageLoading] = useState(false);
   const [usersLoading, setUsersLoading] = useState(false);
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
-  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [msg, setMsg] = useState<{ type: 'ok' | 'error'; text: string } | null>(null);

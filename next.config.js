@@ -8,11 +8,6 @@ const nextConfig = {
         protocol: 'https',
         hostname: '*.blob.vercel-storage.com',
       },
-      // Supabase Storage (in case you use it later)
-      {
-        protocol: 'https',
-        hostname: '*.supabase.co',
-      },
       // Imgur, Cloudinary, etc. — catch-all for external product images
       {
         protocol: 'https',

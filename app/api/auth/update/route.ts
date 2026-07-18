@@ -1,13 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyToken } from '@/lib/auth';
-import { prisma } from '@/lib/db';
+import { verifySession } from '@/lib/auth';
+import { auth, db } from '@/lib/firebase-admin';
+
 export async function PATCH(req: NextRequest) {
-  const token = req.cookies.get('chillzone-token')?.value;
-  if (!token) return NextResponse.json({ error: 'No autorizado.' }, { status: 401 });
-  const payload = await verifyToken(token);
-  if (!payload) return NextResponse.json({ error: 'No autorizado.' }, { status: 401 });
+  const session = await verifySession(req);
+  if (!session) return NextResponse.json({ error: 'No autorizado.' }, { status: 401 });
   const { name, phone } = await req.json();
   if (!name) return NextResponse.json({ error: 'El nombre es requerido.' }, { status: 400 });
-  const user = await prisma.user.update({ where: { id: payload.userId }, data: { name, phone: phone || null } });
-  return NextResponse.json({ user: { userId: user.id, name: user.name, email: user.email, phone: user.phone } });
+
+  await db.collection('users').doc(session.uid).update({ name, phone: phone || null });
+  await auth.updateUser(session.uid, { displayName: name });
+
+  return NextResponse.json({ user: { userId: session.uid, name, email: session.email, phone: phone || null } });
 }

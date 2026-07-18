@@ -1,7 +1,7 @@
 'use client';
 
 import { useCart } from '@/lib/cart-context';
-import type { Product } from '@/lib/db';
+import type { Product } from '@/lib/products';
 import { finalPrice, hasDiscount } from '@/lib/discount';
 import { Plus, Check } from 'lucide-react';
 import Link from 'next/link';

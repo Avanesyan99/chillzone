@@ -1,23 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyToken } from '@/lib/auth';
-import { prisma } from '@/lib/db';
-
-async function isAdmin(req: NextRequest) {
-  const token = req.cookies.get('chillzone-token')?.value;
-  if (!token) return false;
-  const payload = await verifyToken(token);
-  if (!payload) return false;
-  const user = await prisma.user.findUnique({ where: { id: payload.userId }, select: { isAdmin: true } });
-  return user?.isAdmin ?? false;
-}
+import { requireAdmin } from '@/lib/auth';
+import { auth, db } from '@/lib/firebase-admin';
 
 function resolveId(rawId: string | string[] | undefined) {
-  const id = Number(Array.isArray(rawId) ? rawId[0] : rawId);
-  return Number.isInteger(id) ? id : null;
+  const id = Array.isArray(rawId) ? rawId[0] : rawId;
+  return id || null;
 }
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string | string[] | undefined }> }) {
-  if (!(await isAdmin(req))) return NextResponse.json({ error: 'No autorizado.' }, { status: 401 });
+  if (!(await requireAdmin(req))) return NextResponse.json({ error: 'No autorizado.' }, { status: 401 });
 
   const resolvedParams = await params;
   const id = resolveId(resolvedParams.id);
@@ -31,25 +22,28 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     return NextResponse.json({ error: 'No hay campos para actualizar.' }, { status: 400 });
   }
 
-  try {
-    const user = await prisma.user.update({ where: { id }, data: allowed });
-    return NextResponse.json({ user });
-  } catch {
-    return NextResponse.json({ error: 'Usuario no encontrado.' }, { status: 404 });
-  }
+  const ref = db.collection('users').doc(id);
+  const existing = await ref.get();
+  if (!existing.exists) return NextResponse.json({ error: 'Usuario no encontrado.' }, { status: 404 });
+
+  await ref.update(allowed);
+  const updated = await ref.get();
+  return NextResponse.json({ user: { id: ref.id, ...updated.data() } });
 }
 
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string | string[] | undefined }> }) {
-  if (!(await isAdmin(req))) return NextResponse.json({ error: 'No autorizado.' }, { status: 401 });
+  if (!(await requireAdmin(req))) return NextResponse.json({ error: 'No autorizado.' }, { status: 401 });
 
   const resolvedParams = await params;
   const id = resolveId(resolvedParams.id);
   if (!id) return NextResponse.json({ error: 'ID inválido.' }, { status: 400 });
 
-  try {
-    await prisma.user.delete({ where: { id } });
-    return NextResponse.json({ ok: true });
-  } catch {
-    return NextResponse.json({ error: 'Usuario no encontrado.' }, { status: 404 });
-  }
+  const ref = db.collection('users').doc(id);
+  const existing = await ref.get();
+  if (!existing.exists) return NextResponse.json({ error: 'Usuario no encontrado.' }, { status: 404 });
+
+  await ref.delete();
+  await auth.deleteUser(id).catch(() => {}); // Firestore doc is the source of truth for the admin list; ignore if already gone
+
+  return NextResponse.json({ ok: true });
 }

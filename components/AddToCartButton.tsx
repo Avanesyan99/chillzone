@@ -1,6 +1,6 @@
 'use client';
 import { useCart } from '@/lib/cart-context';
-import type { Product } from '@/lib/db';
+import type { Product } from '@/lib/products';
 import { ShoppingBag, Plus, Minus, Check } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
