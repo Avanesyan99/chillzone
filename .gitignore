@@ -8,10 +8,6 @@
 .env.production
 .env.production.local
 
-# ── Prisma ─────────────────────────────────────────────────
-prisma/seed.ts
-prisma/migrations/
-
 # ── Next.js ─────────────────────────────────────────────────
 .next/
 out/
@@ -30,9 +26,6 @@ yarn-error.log*
 *.db-wal
 *.db-shm
 chillzone.db
-
-# ── Prisma generated client (regenerated on install) ────────
-prisma/generated/
 
 # ── OS files ────────────────────────────────────────────────
 .DS_Store

@@ -1,8 +1,4 @@
 /**
- * One-time migration: copy existing Supabase/Postgres data (products + users)
- * into Firestore + Firebase Auth. Run once, then this script and prisma/schema.prisma
- * can be deleted, and DATABASE_URL/DIRECT_URL removed.
- *
  * Requires both the legacy DATABASE_URL/DIRECT_URL and the new FIREBASE_* env vars
  * to be set at the same time.
  */
